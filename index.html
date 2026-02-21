@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BTS Trivia — Website Game</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --card2:#0f162e;
+      --text:#eaf0ff;
+      --muted:#b9c6ff;
+      --accent:#7c5cff;
+      --good:#35d07f;
+      --bad:#ff5c7a;
+      --warn:#ffcc66;
+      --border:#2a3563;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 15% 10%, #1a2a6d55, transparent),
+        radial-gradient(900px 600px at 85% 40%, #7c5cff33, transparent),
+        var(--bg);
+      color:var(--text);
+    }
+    header{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 16px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, var(--accent), #2fe3ff);
+      box-shadow: 0 12px 40px #0008;
+    }
+    h1{margin:0;font-size:18px;line-height:1.1}
+    .sub{color:var(--muted);font-size:12px;margin-top:3px}
+    .wrap{max-width: 980px;margin: 0 auto;padding: 0 16px 26px;}
+    .grid{display:grid;grid-template-columns: 320px 1fr;gap:14px;}
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow: 0 14px 40px #0007;
+      padding:14px;
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#0e1530;
+      color:var(--muted);
+    }
+    .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+    .stat{
+      padding:10px 12px;border-radius:14px;border:1px solid var(--border);
+      background:#0e1530;
+    }
+    .k{font-size:11px;color:var(--muted)}
+    .v{font-size:20px;font-weight:800;margin-top:4px}
+    .hr{height:1px;background:#26305a;margin:12px 0;}
+    button{
+      appearance:none;
+      border:1px solid #33407a;
+      background:#111a36;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      transition: transform .06s ease, filter .15s ease, background .15s ease;
+    }
+    button:hover{background:#15204a;border-color:#44539b;}
+    button:active{transform:translateY(1px);}
+    button.primary{
+      border:none;
+      background: linear-gradient(135deg, var(--accent), #2fe3ff);
+      color:#071024;
+    }
+    button.primary:hover{filter:brightness(1.05);}
+    button:disabled{opacity:.55;cursor:not-allowed;}
+    input, select{
+      width:100%;
+      background:#0b122a;
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      outline:none;
+    }
+    .qTitle{font-size:14px;font-weight:800;margin:4px 0 8px;}
+    .muted{color:var(--muted);font-size:13px;line-height:1.4;}
+    .big{font-size:22px;font-weight:900;margin: 6px 0 2px;}
+    .progress{
+      height:10px;border-radius:999px;background:#0b122a;border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .bar{height:100%;width:0%;background: linear-gradient(90deg, var(--accent), #2fe3ff);}
+    .choices{display:grid;gap:10px;margin-top:10px;}
+    .choice{
+      padding:12px 12px;border-radius:16px;border:1px solid var(--border);
+      background:#0b122a;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .06s ease, border-color .15s ease, background .15s ease;
+    }
+    .choice:hover{border-color:#44539b;background:#0c1432;}
+    .choice:active{transform:translateY(1px);}
+    .choice.locked{cursor:not-allowed;opacity:.95;}
+    .choice.correct{border-color: var(--good); box-shadow: 0 0 0 2px #35d07f22 inset;}
+    .choice.wrong{border-color: var(--bad); box-shadow: 0 0 0 2px #ff5c7a22 inset;}
+    .feedback{
+      margin-top:12px;
+      border:1px solid var(--border);
+      background:#0e1530;
+      border-radius:16px;
+      padding:12px;
+    }
+    .good{color:var(--good);font-weight:900;}
+    .bad{color:var(--bad);font-weight:900;}
+    .warn{color:var(--warn);font-weight:900;}
+    .footerRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:12px;}
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:18px;
+      background:#0e1530;border:1px solid var(--border);
+      padding:10px 12px;border-radius:14px;box-shadow:0 10px 30px #0008;
+      display:none;max-width:calc(100vw - 24px);
+    }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .small{font-size:12px;}
+    .linky{color:#cfe1ff;text-decoration:underline;cursor:pointer;}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div>
+      <h1>BTS Trivia — Website Game</h1>
+      <div class="sub">Multiple choice • score • streak • optional timer • random order</div>
+    </div>
+  </div>
+  <div class="row">
+    <span class="pill mono" id="today"></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT / SETTINGS -->
+    <section class="card">
+      <div class="qTitle">Game Setup</div>
+
+      <label class="muted">Number of questions
+        <select id="numQ" style="margin-top:6px">
+          <option value="8">8</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </label>
+
+      <div style="height:10px"></div>
+
+      <label class="muted">Difficulty mix
+        <select id="mix" style="margin-top:6px">
+          <option value="all" selected>All (Easy/Med/Hard)</option>
+          <option value="easy">Easy only</option>
+          <option value="med">Medium only</option>
+          <option value="hard">Hard only</option>
+        </select>
+      </label>
+
+      <div style="height:10px"></div>
+
+      <label class="muted">Timer (seconds per question)
+        <select id="timer" style="margin-top:6px">
+          <option value="0" selected>Off</option>
+          <option value="20">20s</option>
+          <option value="15">15s</option>
+          <option value="10">10s</option>
+        </select>
+      </label>
+
+      <div class="hr"></div>
+
+      <div class="row">
+        <button class="primary" id="btnStart">Start Game</button>
+        <button id="btnReset">Reset Stats</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="qTitle">Your Stats (this device)</div>
+      <div class="statGrid">
+        <div class="stat"><div class="k">Best Score</div><div class="v" id="best">0</div></div>
+        <div class="stat"><div class="k">Best Streak</div><div class="v" id="bestStreak">0</div></div>
+        <div class="stat"><div class="k">Games Played</div><div class="v" id="played">0</div></div>
+        <div class="stat"><div class="k">Lifetime Correct</div><div class="v" id="correct">0</div></div>
+      </div>
+
+      <p class="muted" style="margin-top:10px">
+        Tip: Turn on a timer for “real test” pressure. 💜
+      </p>
+    </section>
+
+    <!-- RIGHT / GAME -->
+    <section class="card">
+      <div id="screenHome">
+        <div class="big">How it works</div>
+        <ol class="muted" style="margin:0; padding-left:18px;">
+          <li>Pick settings → Start Game.</li>
+          <li>Choose an answer. You’ll get instant feedback + explanation.</li>
+          <li>Try to build a streak and beat your best score.</li>
+        </ol>
+        <div class="hr"></div>
+        <div class="row">
+          <span class="pill">Solo friendly ✅</span>
+          <span class="pill">Randomized 🔀</span>
+          <span class="pill">Instant feedback ⚡</span>
+        </div>
+      </div>
+
+      <div id="screenPlay" style="display:none">
+        <div class="row" style="justify-content:space-between">
+          <div class="qTitle">Question <span id="qNum" class="mono"></span></div>
+          <div class="row">
+            <span class="pill mono" id="difficultyPill">—</span>
+            <span class="pill mono" id="timerPill" style="display:none">⏱ 0</span>
+          </div>
+        </div>
+
+        <div class="progress" aria-label="progress">
+          <div class="bar" id="bar"></div>
+        </div>
+
+        <div class="big" id="questionText" style="margin-top:12px;">—</div>
+        <div class="muted" id="questionSub">Pick the best answer.</div>
+
+        <div class="choices" id="choices"></div>
+
+        <div id="feedback" class="feedback" style="display:none"></div>
+
+        <div class="footerRow">
+          <div class="row">
+            <span class="pill">Score: <b id="score">0</b></span>
+            <span class="pill">Streak: <b id="streak">0</b></span>
+          </div>
+          <div class="row">
+            <button id="btnQuit">Quit</button>
+            <button class="primary" id="btnNext" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screenEnd" style="display:none">
+        <div class="big">Game Over 🎉</div>
+        <p class="muted" id="endSummary"></p>
+
+        <div class="hr"></div>
+
+        <div class="qTitle">Missed Questions</div>
+        <div id="missedList" class="muted small"></div>
+
+        <div class="hr"></div>
+        <div class="row">
+          <button class="primary" id="btnAgain">Play Again</button>
+          <button id="btnReview">Review All Qs</button>
+        </div>
+      </div>
+
+      <div id="screenReview" style="display:none">
+        <div class="big">Review</div>
+        <p class="muted">Scroll through all questions + answers.</p>
+        <div class="hr"></div>
+        <div id="reviewList"></div>
+        <div class="hr"></div>
+        <button id="btnBackHome" class="primary">Back to Home</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/** ==========================
+ * BTS Trivia — Single-file Web Game
+ * ========================== */
+
+const STORAGE_KEY = "bts_trivia_stats_v1";
+
+const QUESTION_BANK = [
+  // EASY
+  {id:1, diff:"Easy", q:"What is RM’s real name?", a:["Kim Namjoon","Min Yoongi","Jung Hoseok","Park Jimin"], correct:0, why:"RM is Kim Namjoon."},
+  {id:2, diff:"Easy", q:"Which member is known as “Worldwide Handsome”?", a:["Jin","V","Jimin","J-Hope"], correct:0, why:"Jin often introduces himself as Worldwide Handsome."},
+  {id:3, diff:"Easy", q:"Who is the youngest (maknae) of BTS?", a:["Suga","Jungkook","RM","Jin"], correct:1, why:"Jungkook is the maknae."},
+  {id:4, diff:"Easy", q:"What is the name of BTS’s fandom?", a:["ARMY","Purple Nation","Bangtan Squad","7Stars"], correct:0, why:"The fandom is ARMY."},
+  {id:5, diff:"Easy", q:"In what year did BTS debut?", a:["2011","2012","2013","2014"], correct:2, why:"BTS debuted in 2013."},
+  {id:6, diff:"Easy", q:"Which song was BTS’s debut title track?", a:["No More Dream","Danger","Just One Day","N.O"], correct:0, why:"Their debut title track was 'No More Dream'."},
+
+  // MEDIUM
+  {id:7, diff:"Medium", q:"Which BTS song features Halsey?", a:["IDOL","Boy With Luv","Spring Day","Mic Drop"], correct:1, why:"Halsey is featured on 'Boy With Luv'."},
+  {id:8, diff:"Medium", q:"Which album includes the song “Fake Love”?", a:["WINGS","Love Yourself: Tear","BE","Map of the Soul: 7"], correct:1, why:"'Fake Love' is on 'Love Yourself: Tear'."},
+  {id:9, diff:"Medium", q:"What does BTS stand for in Korean?", a:["Beyond The Scene","Bangtan Sonyeondan","Bulletproof Time Soldiers","Best Team Sound"], correct:1, why:"BTS = Bangtan Sonyeondan (often translated as 'Bulletproof Boy Scouts')."},
+  {id:10, diff:"Medium", q:"Which track became BTS’s first Billboard Hot 100 #1?", a:["Butter","Dynamite","DNA","Boy With Luv"], correct:1, why:"'Dynamite' was their first Hot 100 #1."},
+  {id:11, diff:"Medium", q:"Which member is well-known for contemporary dance training and is a main dancer?", a:["Jimin","RM","Jin","Suga"], correct:0, why:"Jimin has a contemporary dance background and is a main dancer."},
+  {id:12, diff:"Medium", q:"Which BTS member is especially associated with producing and is part of the rap line?", a:["V","Suga","Jin","Jimin"], correct:1, why:"Suga (Agust D) is heavily involved in producing."},
+
+  // HARD (still mainstream, but trickier)
+  {id:13, diff:"Hard", q:"Which member released the solo mixtape “Hope World”?", a:["RM","Jungkook","J-Hope","Suga"], correct:2, why:"'Hope World' is J-Hope’s mixtape."},
+  {id:14, diff:"Hard", q:"Which BTS member studied abroad in New Zealand?", a:["RM","Jin","V","Suga"], correct:0, why:"RM studied in New Zealand when he was younger."},
+  {id:15, diff:"Hard", q:"Which BTS album is most associated with the 'HYYH' era?", a:["The Most Beautiful Moment in Life","BE","WINGS","Proof"], correct:0, why:"HYYH literally refers to The Most Beautiful Moment in Life."},
+  {id:16, diff:"Hard", q:"Which song is known for the lyric/theme 'You never walk alone' and became iconic for fans?", a:["Spring Day","I Need U","Black Swan","ON"], correct:0, why:"'Spring Day' is famous and deeply meaningful to ARMY."},
+  {id:17, diff:"Hard", q:"Which track is the title song of the album 'BE'?", a:["Life Goes On","Stay","Blue & Grey","Dynamite"], correct:0, why:"'Life Goes On' is the title track of 'BE'."},
+];
+
+function todayISO(){ const d=new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); }
+
+function loadStats(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try { return JSON.parse(raw); } catch(e){} }
+  return { best:0, bestStreak:0, played:0, correct:0 };
+}
+function saveStats(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); renderStats(); }
+
+let stats = loadStats();
+
+const screens = {
+  home: document.getElementById("screenHome"),
+  play: document.getElementById("screenPlay"),
+  end: document.getElementById("screenEnd"),
+  review: document.getElementById("screenReview"),
+};
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.style.display="none");
+  screens[name].style.display="block";
+}
+const toastEl = document.getElementById("toast");
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.style.display="block";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>toastEl.style.display="none", 2000);
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function filterByMix(mix){
+  if(mix==="all") return QUESTION_BANK;
+  const label = mix==="easy" ? "Easy" : mix==="med" ? "Medium" : "Hard";
+  return QUESTION_BANK.filter(q=>q.diff===label);
+}
+
+let game = null;
+let timerInt = null;
+
+function startGame(){
+  const numQ = parseInt(document.getElementById("numQ").value,10);
+  const mix = document.getElementById("mix").value;
+  const timerSec = parseInt(document.getElementById("timer").value,10);
+
+  const pool = filterByMix(mix);
+  const picked = shuffle(pool).slice(0, Math.min(numQ, pool.length));
+
+  game = {
+    qs: picked,
+    i: 0,
+    score: 0,
+    streak: 0,
+    bestStreakThisGame: 0,
+    timerSec,
+    timeLeft: timerSec,
+    locked: false,
+    missed: [],
+    answered: [], // for review
+  };
+
+  showScreen("play");
+  renderQuestion();
+}
+
+function stopTimer(){
+  if(timerInt) clearInterval(timerInt);
+  timerInt = null;
+}
+function startTimer(){
+  stopTimer();
+  if(!game || !game.timerSec) return;
+
+  game.timeLeft = game.timerSec;
+  const pill = document.getElementById("timerPill");
+  pill.style.display = "inline-flex";
+  pill.textContent = `⏱ ${game.timeLeft}`;
+
+  timerInt = setInterval(()=>{
+    game.timeLeft--;
+    pill.textContent = `⏱ ${game.timeLeft}`;
+    if(game.timeLeft <= 0){
+      stopTimer();
+      if(!game.locked){
+        lockAnswer(-1, true); // timeout
+      }
+    }
+  }, 1000);
+}
+
+function renderQuestion(){
+  const q = game.qs[game.i];
+
+  document.getElementById("qNum").textContent = `${game.i+1}/${game.qs.length}`;
+  document.getElementById("difficultyPill").textContent = q.diff;
+  document.getElementById("score").textContent = game.score;
+  document.getElementById("streak").textContent = game.streak;
+
+  const pct = Math.round((game.i / game.qs.length) * 100);
+  document.getElementById("bar").style.width = `${pct}%`;
+
+  document.getElementById("questionText").textContent = q.q;
+  document.getElementById("questionSub").textContent = "Pick the best answer.";
+
+  const choicesBox = document.getElementById("choices");
+  choicesBox.innerHTML = "";
+
+  document.getElementById("feedback").style.display="none";
+  document.getElementById("btnNext").disabled = true;
+
+  game.locked = false;
+
+  q.a.forEach((txt, idx)=>{
+    const div = document.createElement("div");
+    div.className = "choice";
+    div.textContent = txt;
+    div.onclick = ()=>{
+      if(game.locked) return;
+      lockAnswer(idx, false);
+    };
+    choicesBox.appendChild(div);
+  });
+
+  // timer
+  const pill = document.getElementById("timerPill");
+  pill.style.display = game.timerSec ? "inline-flex" : "none";
+  if(game.timerSec) startTimer(); else stopTimer();
+}
+
+function lockAnswer(selectedIndex, isTimeout){
+  const q = game.qs[game.i];
+  game.locked = true;
+  stopTimer();
+
+  const choicesBox = document.getElementById("choices");
+  const nodes = [...choicesBox.children];
+
+  // mark correct and selected
+  nodes.forEach((node, idx)=>{
+    node.classList.add("locked");
+    if(idx === q.correct) node.classList.add("correct");
+    if(selectedIndex === idx && idx !== q.correct) node.classList.add("wrong");
+  });
+
+  const correct = selectedIndex === q.correct;
+
+  if(correct){
+    game.score += (q.diff==="Easy" ? 1 : q.diff==="Medium" ? 2 : 3);
+    game.streak += 1;
+    game.bestStreakThisGame = Math.max(game.bestStreakThisGame, game.streak);
+    stats.correct += 1;
+  } else {
+    game.streak = 0;
+    game.missed.push({
+      q: q.q,
+      your: isTimeout ? "(Timed out)" : (selectedIndex>=0 ? q.a[selectedIndex] : "(No answer)"),
+      correct: q.a[q.correct],
+      why: q.why,
+      diff: q.diff
+    });
+  }
+
+  game.answered.push({
+    q: q.q, a: q.a, correctIndex: q.correct, why: q.why, diff: q.diff,
+    selectedIndex, isTimeout
+  });
+
+  const fb = document.getElementById("feedback");
+  fb.style.display="block";
+
+  const resultLine = correct
+    ? `<div class="good">✅ Correct!</div>`
+    : `<div class="bad">❌ ${isTimeout ? "Time’s up!" : "Not quite."}</div>`;
+
+  const pts = correct ? (q.diff==="Easy"?1:q.diff==="Medium"?2:3) : 0;
+
+  fb.innerHTML = `
+    ${resultLine}
+    <div class="muted" style="margin-top:6px"><b>Answer:</b> ${escapeHTML(q.a[q.correct])}</div>
+    <div class="muted" style="margin-top:6px"><b>Why:</b> ${escapeHTML(q.why)}</div>
+    <div class="muted" style="margin-top:6px"><b>Points:</b> ${pts} • <b>Streak:</b> ${game.streak}</div>
+  `;
+
+  document.getElementById("score").textContent = game.score;
+  document.getElementById("streak").textContent = game.streak;
+
+  document.getElementById("btnNext").disabled = false;
+}
+
+function nextQuestion(){
+  if(game.i < game.qs.length - 1){
+    game.i++;
+    renderQuestion();
+  } else {
+    endGame();
+  }
+}
+
+function endGame(){
+  stopTimer();
+
+  stats.played += 1;
+  stats.best = Math.max(stats.best, game.score);
+  stats.bestStreak = Math.max(stats.bestStreak, game.bestStreakThisGame);
+  saveStats();
+
+  showScreen("end");
+
+  const total = game.qs.length;
+  const missed = game.missed.length;
+  const correct = total - missed;
+
+  document.getElementById("bar").style.width = "100%";
+
+  document.getElementById("endSummary").innerHTML = `
+    You scored <b>${game.score}</b> points with <b>${correct}/${total}</b> correct.
+    Best streak this game: <b>${game.bestStreakThisGame}</b>.
+  `;
+
+  const missedList = document.getElementById("missedList");
+  if(missed === 0){
+    missedList.innerHTML = `<span class="good">Perfect game! 💜</span>`;
+  } else {
+    missedList.innerHTML = game.missed.map((m, idx)=>`
+      <div style="margin-bottom:10px">
+        <b>${idx+1}. [${m.diff}]</b> ${escapeHTML(m.q)}<br/>
+        <span class="bad">Your answer:</span> ${escapeHTML(m.your)}<br/>
+        <span class="good">Correct:</span> ${escapeHTML(m.correct)}<br/>
+        <span class="muted">Why:</span> ${escapeHTML(m.why)}
+      </div>
+    `).join("");
+  }
+}
+
+function renderReview(){
+  const box = document.getElementById("reviewList");
+  box.innerHTML = "";
+
+  const all = shuffle(QUESTION_BANK); // fun reorder for review
+  all.forEach((q, i)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "feedback";
+    wrap.innerHTML = `
+      <div class="row" style="justify-content:space-between">
+        <b>${i+1}. [${q.diff}] ${escapeHTML(q.q)}</b>
+        <span class="pill mono">Answer: ${escapeHTML(q.a[q.correct])}</span>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        ${q.a.map((opt, idx)=> idx===q.correct
+          ? `<div class="good">• ${escapeHTML(opt)}</div>`
+          : `<div>• ${escapeHTML(opt)}</div>`
+        ).join("")}
+      </div>
+      <div class="muted" style="margin-top:8px"><b>Why:</b> ${escapeHTML(q.why)}</div>
+    `;
+    box.appendChild(wrap);
+  });
+}
+
+function renderStats(){
+  document.getElementById("best").textContent = stats.best;
+  document.getElementById("bestStreak").textContent = stats.bestStreak;
+  document.getElementById("played").textContent = stats.played;
+  document.getElementById("correct").textContent = stats.correct;
+}
+
+function resetStats(){
+  if(!confirm("Reset saved stats on this device?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  stats = loadStats();
+  renderStats();
+  toast("Stats reset.");
+}
+
+function quitGame(){
+  stopTimer();
+  game = null;
+  showScreen("home");
+}
+
+function escapeHTML(s){
+  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+// Wire buttons
+document.getElementById("btnStart").addEventListener("click", startGame);
+document.getElementById("btnReset").addEventListener("click", resetStats);
+document.getElementById("btnNext").addEventListener("click", nextQuestion);
+document.getElementById("btnQuit").addEventListener("click", quitGame);
+document.getElementById("btnAgain").addEventListener("click", startGame);
+document.getElementById("btnReview").addEventListener("click", ()=>{
+  showScreen("review");
+  renderReview();
+});
+document.getElementById("btnBackHome").addEventListener("click", ()=>{
+  showScreen("home");
+});
+
+// init
+document.getElementById("today").textContent = todayISO();
+renderStats();
+showScreen("home");
+</script>
+</body>
+</html>
